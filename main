@@ -1,0 +1,269 @@
+#!/bin/bash
+
+function menu {
+	clear	
+	echo -e "\t\tLightSail Main Page\n\n"
+	echo -e "\t1. Launch new Instance \n"
+	echo -e "\t2. To Terminate Instance \n"
+	echo -e "\t3. To Integrate CloudFront \n"
+	echo -e "\t4. SSL \n"
+	echo -e "\t0. Exit \n"
+	echo -n "Enter Option : "
+	read menuOption
+
+	if [ $menuOption -gt 4 ]
+	then 
+		echo "INVALID CHOICE"
+		sleep 3
+		clear
+		menu
+	elif [ $menuOption -eq 0 ]
+	then
+		exit
+	elif [ $menuOption -eq 1 ]
+	then
+		launchInstance
+	elif [ $menuOption -eq 2 ]
+	then
+		terminateInstance
+	elif [ $menuOption -eq 3 ]
+	then
+		echo "To be Continued ..."
+	
+	elif [ $menuOption -eq 4 ]
+	then
+		echo "To be Continued ..."
+	fi
+ 	
+}
+
+function terminateInstance {
+	clear
+	
+	regionList
+	echo -n "Enter Your Region : "
+	read region
+
+	if [ $(aws lightsail get-instances --query "instances[*].{Name:name,BundleID:bundleId,Public_IP:publicIpAddress}" --region $region --output table | wc -c) -gt 1 ]
+	then
+		echo "List of Available Instances"
+		aws lightsail get-instances --query "instances[*].{Name:name,BundleID:bundleId,Public_IP:publicIpAddress}" --region $region --output table
+	
+		echo -n "Enter Instance Name : "
+		read insName
+		aws lightsail delete-instance --instance-name $insName --region $region
+		sleep 5
+		echo "$insName is Terminated"
+		echo "List of Available Instances"
+		aws lightsail get-instances --query "instances[*].{Name:name,BundleID:bundleId,Public_IP:publicIpAddress}" --region $region --output table
+	
+		echo -e "\nPress ENTER to continue...."
+		read temptocontinue
+		menu
+	else
+		echo "You have no Instances in $region"
+		echo -e "\nPress ENTER to continue...."
+		read temptocontinue
+		menu
+	fi
+}
+
+function launchInstance {
+	
+	clear
+
+	regionList
+
+	echo -n "Enter Region : "
+	read region
+
+	echo -n "Enter Name for Instance : "
+	read insName
+	echo "Instance Name is $insName"
+
+	aws lightsail get-bundles --region $region --query "bundles[*].{BundleId:bundleId,Price:price,CPU:cpuCount,Disk_Size:diskSizeInGb,RAM:ramSizeInGb}" --output table
+
+	echo -n "Enter Bundle ID : "
+	read bundleId
+	echo "Bundle ID is $bundleId"
+
+	if  [ $(aws lightsail get-key-pairs --region $region --query "keyPairs[*].name" --output table | wc -c) -gt 1 ]
+	then
+		aws lightsail get-key-pairs --region $region --query "keyPairs[*].name" --output table	
+	else
+		echo "You have no key-pair available in $region"
+		echo "It is recommended to create a new Key-Pair"
+	fi
+
+	echo -e "\t0. To Create a New Key-Pair in $region"
+	echo -e "\t1. To use available Key-Pair in $region"
+	echo -n "Enter Option : "
+	read keyOption
+	if [ $keyOption -eq 0 ]
+	then
+		echo -n "Enter Key Pair Name : "
+		read keyName
+		aws lightsail create-key-pair --key-pair-name $keyName --region $region | jq -r ".privateKeyBase64" > ${keyName}.pem
+	fi
+	
+	aws lightsail get-key-pairs --region $region --query "keyPairs[*].name" --output table
+
+	echo -n "Enter Key Pair Name : "
+	read keyName
+	echo "$keyName is selected"
+
+	echo -n "Enter GitHub UserName : "
+	read gituserName
+	echo -e "\n"
+	echo -n "Enter GitHub OAuthToken : "
+	read gituserPass
+	echo -e "\n"
+	echo -n "Enter GitHub RepoName : "
+	read gituserRepo
+	echo -e "\n"
+	sed -i "s@changegithubpassword@$gituserPass@" ./mainscript.sh
+	sed -i "s@changegithubusername@$gituserName@" ./mainscript.sh
+	sed -i "s@changegithubreponame@$gituserRepo@" ./mainscript.sh
+	crontgen
+
+	echo "Launching....."
+	sleep 1
+
+	aws lightsail create-instances \
+		--instance-names $insName \
+		--availability-zone ${region}a \
+		--blueprint-id ubuntu_20_04 \
+		--bundle-id $bundleId \
+		--key-pair-name $keyName \
+		--user-data file://mainscript.sh \
+		--region $region
+
+
+	sleep 5 
+
+	#sed -i "s@$gitLink@changegithublink@" ./mainscript.sh
+	#sed -i "s@$cronExp@changecronExpression@" ./mainscript.sh 
+
+	sleep 2
+	echo -e "\nPress ENTER to continue...."
+	read temptocontinue
+	menu
+
+}
+
+function regionList {
+	echo "List of Available Regions for LightSail"
+	aws lightsail get-regions --query "regions[*].{Name:displayName,ID:name}" --output table
+	echo "Use Region ID Only"
+}
+
+function crontgen {
+	clear 
+	echo -e "CronExpression --- \n"
+	echo -e "\t1. To Enter Cron-Expression Manually \n"
+	echo -e "\t2. To Choose from Available Options \n"
+	echo -e "\t3. To Update on Every Change"
+	echo -n "Enter your choice : "
+	read cronChoice
+	if [ $cronChoice -eq 1 ]
+	then
+		clear
+		echo "# Example of job definition:"
+		echo "# .---------------- minute (0 - 59)"
+		echo "# |  .------------- hour (0 - 23)"
+		echo "# |  |  .---------- day of month (1 - 31)"
+		echo "# |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ..."
+		echo "# |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat"
+		echo "# |  |  |  |  |"
+		echo "# *  *  *  *  *     ->  Execute Every Minute"
+		echo "# */3  *  *  *  *   ->  Execute in Every Three Minutes"
+		echo "# 0  1  *  *  *     ->  Execute at 01:00 every day"
+		echo "# 0  0  4  *  *     -> Execute at 00:00 day 4 of every month"
+		echo "# 0  0  *  1  *     -> Execute at 00:00 on every day of Jan only"
+		echo  "# 0  0  *  *  1     -> Execute at 00:00 on every Monday" 
+		echo -e "\n"
+		echo -n "Enter CronExpression : "
+		read cronExp
+	elif [ $cronChoice -eq 2 ]
+	then
+		clear
+		echo "Available Options are : "
+		echo -e "\t1. For Everyday \n"
+		echo -e "\t2. For Every 2 days \n"
+		echo -e "\t3. For Every 3 days \n"
+		echo -e "\t4. For Weekly \n"
+		echo -e "\t5. For Monthly \n"
+		echo -n "Enter your Choice : "
+		read cronChoice
+		if [ $cronChoice -eq 1 ]
+		then
+			times
+			cronExp="0 $timevarist * * *"
+		elif [ $cronChoice -eq 2 ]
+		then
+			times
+			cronExp="0 $timevarist */2 * *"
+		elif [ $cronChoice -eq 3 ]
+		then
+			times
+			cronExp="0 $timevarist */3 * *"
+		elif [ $cronChoice -eq 4 ]
+		then
+			times
+			echo -e "\n"
+			echo -n "Enter day of week (0 - 6) (0 for Sunday and 6 for Saturday) : "
+			read dayvar
+			cronExp="0 $timevarist * * $dayvar"
+		elif [ $cronChoice -eq 5 ]
+		then
+			times
+			echo -e "\n"
+			echo -n "Enter Month (1-12) (1 for Jan and 12 for Dec) : "
+			read monthvar
+			cronExp="0 $timevarist * $monthvar *"
+		else
+			echo "GREAT MAN Wrong Choice !!!"
+		fi
+	else
+		cronExp="* * * * *"
+	fi
+
+	sed -i "s@changecronExpression@$cronExp@" ./mainscript.sh
+}
+
+function times {
+		echo "Time in IST"
+		echo -e "0. 00:30 \t1. 01:30 \t2. 02:30 \t3. 03:30"
+		echo -e "4. 04:30 \t5. 05:30 \t6. 06:30 \t7. 07:30"
+		echo -e "8. 08:30 \t9. 09:30 \t10. 10:30 \t11. 11:30"
+		echo -e "12. 12:30 \t13. 13:30 \t14. 14:30 \t15. 15:30"
+		echo -e "16. 16:30 \t17. 17:30 \t18. 18:30 \t19. 19:30"
+		echo -e "20. 20:30 \t21. 21:30 \t22. 22:30 \t23. 23:30"
+		echo -n "Enter your choice(0-23) : "
+		read timevar
+		timevarist=0
+		if [ $timevar -eq 0 ]
+		then
+			timevarist=19
+		elif [ $timevar -eq 1 ]
+		then
+			timevarist=20
+		elif [ $timevar -eq 2 ]
+		then
+			timevarist=21
+		elif [ $timevar -eq 3 ]
+		then
+			timevarist=22
+		elif [ $timevar -eq 4 ]
+		then
+			timevarist=23
+		elif [ $timevar -gt 23 ]
+		then
+			echo "Wrong Choice"
+		else 
+			timevarist=$(($timevar-5))
+		fi
+}
+
+
+menu
