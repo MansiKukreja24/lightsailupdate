@@ -8,9 +8,9 @@ npm --version
 sudo apt-get install git --assume-yes
 sudo npm install pm2 -g
 #sudo apt update && upgrade
-sudo apt install apache2 --assume-yes
-systemctl start apache2
-systemctl enable apache2
+sudo apt install nginx --assume-yes
+systemctl start nginx
+systemctl enable nginx
 apt-get install build-essential --assume-yes
 sudo apt install jq -y
 sleep 5
@@ -49,7 +49,7 @@ function funstartserver {
         else
                 echo "Not an app"
         fi
-	systemctl restart apache2
+	systemctl restart nginx
 	sleep 2
 }
 
@@ -61,7 +61,7 @@ function funcreateconffile {
                 servname=\$(jq -r .server_name \${arr1[\$i]}/deploy.json)
                 servalias=\$(jq -r .server_alias \${arr1[\$i]}/deploy.json)
                 cd \${arr1[\$i]}
-                sudo tee -a  /etc/apache2/sites-available/\${arr2[\$i]}.conf >/dev/null << EOF
+                sudo tee -a  /etc/nginx/sites-available/\${arr2[\$i]}.conf >/dev/null << EOF
                 <VirtualHost *:80>
                 ServerName \$servname 
                 ServerAlias \$servalias
@@ -110,7 +110,7 @@ EOF
                 servname=\$(jq -r .server_name \${arr1[\$i]}/deploy.json)
                 servalias=\$(jq -r .server_alias \${arr1[\$i]}/deploy.json)
                 cd \${arr1[\$i]}
-                sudo tee -a  /etc/apache2/sites-available/\${arr2[\$i]}.conf >/dev/null << EOF
+                sudo tee -a  /etc/nginx/sites-available/\${arr2[\$i]}.conf >/dev/null << EOF
                 <VirtualHost *:80>
                 ServerName \$servname 
                 ServerAlias \$servalias
@@ -156,7 +156,7 @@ EOF
         then
                 servname=\$(jq -r .server_name \${arr1[\$i]}/deploy.json)
                 servalias=\$(jq -r .server_alias \${arr1[\$i]}/deploy.json)
-                sudo tee -a  /etc/apache2/sites-available/\${arr2[\$i]}.conf >/dev/null << EOF
+                sudo tee -a  /etc/nginx/sites-available/\${arr2[\$i]}.conf >/dev/null << EOF
                 <VirtualHost *:80>
                 # This is the name of the vhost.
                 ServerName \$servname
@@ -165,8 +165,8 @@ EOF
                 ServerAlias \$servalias
                 # Directory where the website code lives.
                 DocumentRoot \${arr1[\$i]}
-                ErrorLog \${APACHE_LOG_DIR}/error.log
-                CustomLog \${APACHE_LOG_DIR}/access.log combined
+                ErrorLog \${NGINX_LOG_DIR}/error.log
+                CustomLog \${NGINX_LOG_DIR}/access.log combined
                 <Directory />
                         Options FollowSymLinks
                         AllowOverride All
@@ -182,8 +182,8 @@ EOF
         ServerAlias \$servalias
         # Directory where the website code lives.
         DocumentRoot \${arr1[\$i]}
-        ErrorLog \${APACHE_LOG_DIR}/error.log
-        CustomLog \${APACHE_LOG_DIR}/access.log combined
+        ErrorLog \${NGINX_LOG_DIR}/error.log
+        CustomLog \${NGINX_LOG_DIR}/access.log combined
         <Directory />
                 Options FollowSymLinks
                 AllowOverride All
@@ -235,12 +235,12 @@ do
 done
 for(( i=0; i<\$total; i++ ))
 do
-	if [ -f /etc/apache2/sites-available/\${arr2[\$i]}.conf ]
+	if [ -f /etc/nginx/sites-available/\${arr2[\$i]}.conf ]
 	then
 		echo "File Exist"
 		continue
 	else
-		touch /etc/apache2/sites-available/\${arr2[\$i]}.conf
+		touch /etc/nginx/sites-available/\${arr2[\$i]}.conf
 	fi 
         funcreateconffile
 done
@@ -272,12 +272,12 @@ done
 
 for(( i=0; i<\$total; i++ ))
 do
-	if [ -f /etc/apache2/sites-available/\${arr2[\$i]}.conf ]
+	if [ -f /etc/nginx/sites-available/\${arr2[\$i]}.conf ]
 	then
 		echo "File Exist"
 		continue
 	else
-		touch /etc/apache2/sites-available/\${arr2[\$i]}.conf
+		touch /etc/nginx/sites-available/\${arr2[\$i]}.conf
 	fi
 	funcreateconffile 
 done
