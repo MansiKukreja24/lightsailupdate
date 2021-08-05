@@ -76,8 +76,6 @@ function launchInstance {
 
 	echo -n "Enter Region : "
 	read region
-	if $region!=BundleId
-	echo -n "Enter Region : "
 
 	echo -n "Enter Name for Instance : "
 	read insName
