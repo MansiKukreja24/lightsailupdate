@@ -74,7 +74,7 @@ function launchInstance {
 
 	regionList
 
-	echo -n Enter Region :
+	echo -n "Enter Region : "
 	read region
 	echo "Instance Region is $region"
 
