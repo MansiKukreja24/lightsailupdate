@@ -76,9 +76,10 @@ function launchInstance {
 
 	echo -n "Enter Region : "
 	read region
-	$region!=$id
+	$region!=$ID
 	regionList
 	echo -n "Enter Region : "
+	read region
 	echo "Instance Name is $region"
 
 	echo -n "Enter Name for Instance : "
