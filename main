@@ -76,7 +76,7 @@ function launchInstance {
 
 	echo -n "Enter Region : "
 	read region
-	if $region!=$id
+	$region!=$id
 	regionList
 	echo -n "Enter Region : "
 	echo "Instance Name is $region"
