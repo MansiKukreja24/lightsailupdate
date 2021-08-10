@@ -148,7 +148,7 @@ function launchInstance {
 	sleep 2
 	echo -n "Enter Email : "
 	read Email
-	echo "Instance Region is $Email"
+	echo "Light sail launched" | sudo mail -s 'light sail' $Email
 
 	sleep 2
 	echo -e "\nPress ENTER to continue...."
