@@ -143,7 +143,12 @@ function launchInstance {
 	sleep 5 
 
 	#sed -i "s@$gitLink@changegithublink@" ./mainscript.sh
-	#sed -i "s@$cronExp@changecronExpression@" ./mainscript.sh 
+	#sed -i "s@$cronExp@changecronExpression@" ./mainscript.sh
+	
+	sleep 2
+	echo -n "Enter Email : "
+	read Email
+	echo "Instance Region is $Email"
 
 	sleep 2
 	echo -e "\nPress ENTER to continue...."
