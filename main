@@ -39,7 +39,7 @@ function menu {
 
 function terminateInstance {
 	clear
-	
+	lightsailmail
 	regionList
 	echo -n "Enter Your Region : "
 	read region
@@ -60,6 +60,8 @@ function terminateInstance {
 		echo -e "\nPress ENTER to continue...."
 		read temptocontinue
 		menu
+		sleep 5
+		echo "LighSail Instance Is Terminated" | sudo mail -s 'light sail' $Email
 	else
 		echo "You have no Instances in $region"
 		echo -e "\nPress ENTER to continue...."
@@ -74,9 +76,6 @@ function lightsailmail {
 			echo "root:rnareendra9573@gmail.com:smtp.gmail.com:587" >> /etc/ssmtp/revaliases
 			echo -n "Enter Email : "
 			read Email
-			echo -n "Enter Body of the Mail : "
-			read body
-			echo $body | sudo mail -s 'light sail' $Email
 }
 
 function launchInstance {
@@ -158,6 +157,7 @@ function launchInstance {
 
 	#sed -i "s@$gitLink@changegithublink@" ./mainscript.sh
 	#sed -i "s@$cronExp@changecronExpression@" ./mainscript.sh
+	echo "LighSail Instance Is Launched" | sudo mail -s 'light sail' $Email
 
 	sleep 2
 	echo -e "\nPress ENTER to continue...."
