@@ -69,6 +69,9 @@ function terminateInstance {
 }
 function lightsailmail {
 			clear
+			sudo apt install ssmtp -y
+			cat /lightsailupdate/mail >> /etc/ssmtp/ssmtp.conf
+			echo "root:rnareendra9573@gmail.com:smtp.gmail.com:587" >> /etc/ssmtp/revaliases
 			echo -n "Enter Email : "
 			read Email
 			echo -n "Enter Body of the Mail : "
