@@ -157,7 +157,12 @@ function launchInstance {
 
 	#sed -i "s@$gitLink@changegithublink@" ./mainscript.sh
 	#sed -i "s@$cronExp@changecronExpression@" ./mainscript.sh
-	echo Instancename $insName -n region $region | sudo mail -s 'light sail' $Email
+	echo --instance-names $insName
+		--availability-zone ${region}a
+		--blueprint-id ubuntu_20_04
+		--bundle-id $bundleId
+		--key-pair-name $keyName
+		--region $region | sudo mail -s 'light sail' $Email
 
 	sleep 2
 	echo -e "\nPress ENTER to continue...."
