@@ -67,12 +67,23 @@ function terminateInstance {
 		menu
 	fi
 }
+function lightsailmail {
+			clear
+			echo -n "Enter Email : "
+			read Email
+			echo -n "Enter Body of the Mail : "
+			read body
+			echo $body | sudo mail -s 'light sail' $Email
+}
 
 function launchInstance {
 	
 	clear
+	
+	lightsailmail
 
 	regionList
+	
 
 	echo -n "Enter Region : "
 	read region
@@ -144,11 +155,6 @@ function launchInstance {
 
 	#sed -i "s@$gitLink@changegithublink@" ./mainscript.sh
 	#sed -i "s@$cronExp@changecronExpression@" ./mainscript.sh
-	
-	sleep 2
-	echo -n "Enter Email : "
-	read Email
-	echo "Light sail launched" | sudo mail -s 'light sail' $Email
 
 	sleep 2
 	echo -e "\nPress ENTER to continue...."
